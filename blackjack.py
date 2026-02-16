@@ -11,7 +11,7 @@ try:
     import torch
     from reinforce import Policy as ReinforcePolicy
     if os.path.exists(POLICY_PATH):
-        policy = ReinforcePolicy(state_dim=20, hidden_dim=128)
+        policy = ReinforcePolicy(state_dim=22, hidden_dim=128)
         policy.load_state_dict(torch.load(POLICY_PATH, map_location="cpu"))
         policy.eval()
         print("Loaded trained policy from policy.pt")
@@ -47,7 +47,7 @@ CARD_REVEAL_DELAY_DEAL = 150  # ms between initial 4 cards (faster)
 
 
 def hands_to_state(dealer_hand, player_hand):
-    """Convert blackjack.py hands (1-13) to 20-dim policy state. Cards 11,12,13 -> 10."""
+    """Convert blackjack.py hands (1-13) to 22-dim policy state. Cards 11,12,13 -> 10. Includes player_sum, dealer_sum."""
     dealer_counts = [0] * 10
     player_counts = [0] * 10
     for c in dealer_hand:
@@ -56,7 +56,11 @@ def hands_to_state(dealer_hand, player_hand):
     for c in player_hand:
         v = min(c, 10)
         player_counts[v - 1] += 1
-    return np.array(dealer_counts + player_counts, dtype=np.float32)
+
+    player_sum = get_hand_value(player_hand) / 21.0
+    dealer_sum = get_hand_value(dealer_hand) / 21.0
+
+    return np.array(dealer_counts + player_counts + [player_sum, dealer_sum], dtype=np.float32)
 
 
 def get_policy_action(dealer_hand, player_hand):

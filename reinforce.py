@@ -14,7 +14,7 @@ from env import BlackjackEnv
 class Policy(nn.Module):
     """MLP policy: state -> logit -> sigmoid = P(action=1)."""
 
-    def __init__(self, state_dim: int = 20, hidden_dim: int = 64):
+    def __init__(self, state_dim: int = 22, hidden_dim: int = 64):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(state_dim, hidden_dim),
@@ -26,7 +26,7 @@ class Policy(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Return P(action=1) via sigmoid."""
-        logit = self.net(x).squeeze(-1)
+        logit = torch.clamp(self.net(x).squeeze(-1), -5, 5)
         return torch.sigmoid(logit)
 
     def get_action(self, state: np.ndarray, deterministic: bool = False) -> tuple[int, torch.Tensor]:
@@ -35,20 +35,23 @@ class Policy(nn.Module):
         prob = self.forward(x).squeeze(0)
         dist = Bernoulli(probs=prob)
 
+        # if state[-2] * 21 >= 17 and action == 1:
+        #     print("Warning: Player sum >= 17 and action is hit")
+
         if deterministic:
             action = 1 if prob.item() > 0.5 else 0
         else:
             action = dist.sample().item()
 
         log_prob = dist.log_prob(torch.tensor(action, dtype=torch.float32))
-        return action, log_prob
+        return action, log_prob, prob
 
 
 def train_reinforce(
     env: BlackjackEnv,
     policy: Policy,
     optimizer: torch.optim.Optimizer,
-    n_episodes: int = 150_000,
+    n_episodes: int = 70_000,
     gamma: float = 1.0,
     use_baseline: bool = False,
     baseline_decay: float = 0.99,
@@ -66,13 +69,16 @@ def train_reinforce(
         state = env.reset(seed=seed if episode == 0 else None)
         log_probs: list[torch.Tensor] = []
         rewards: list[float] = []
+        probs: list[torch.Tensor] = []
+
 
         while True:
-            action, log_prob = policy.get_action(state)
+            action, log_prob, prob = policy.get_action(state)
             next_state, reward, done, _ = env.step(action)
 
             log_probs.append(log_prob)
             rewards.append(reward)
+            probs.append(prob)
 
             if done:
                 break
@@ -99,7 +105,13 @@ def train_reinforce(
         else:
             returns_t = torch.tensor(returns, dtype=torch.float32)
 
+        eps = 1e-8
+        entropy = sum(
+            -p * torch.log(p + eps) + (1 - p) * torch.log(1 - p + eps) for p in probs
+        )
+
         loss = -(sum(lp * G for lp, G in zip(log_probs, returns_t)))
+        loss -= entropy * 0.01
 
         optimizer.zero_grad()
         loss.backward()
@@ -129,7 +141,7 @@ def log_episodes(
             state = env.reset()
             steps = []
             while True:
-                action, _ = policy.get_action(state, deterministic=True)
+                action, _, _ = policy.get_action(state, deterministic=True)
                 prob = policy.forward(
                     torch.from_numpy(state).float().unsqueeze(0)
                 ).item()
@@ -169,7 +181,7 @@ def evaluate(env: BlackjackEnv, policy: Policy, n_episodes: int = 10_000, seed: 
             state = env.reset()
             ep_reward = 0
             while True:
-                action, _ = policy.get_action(state, deterministic=True)
+                action, _, _ = policy.get_action(state, deterministic=True)
                 state, reward, done, _ = env.step(action)
                 ep_reward += reward
                 if done:
@@ -181,15 +193,15 @@ def evaluate(env: BlackjackEnv, policy: Policy, n_episodes: int = 10_000, seed: 
 
 def main():
     env = BlackjackEnv(number_of_decks=1)
-    policy = Policy(state_dim=20, hidden_dim=128)
-    optimizer = torch.optim.Adam(policy.parameters(), lr=1e-3)
+    policy = Policy(state_dim=22, hidden_dim=128)
+    optimizer = torch.optim.Adam(policy.parameters(), lr=5e-4)
 
     print("Training REINFORCE (150k episodes, hidden=128)...")
     train_reinforce(
         env,
         policy,
         optimizer,
-        n_episodes=150_000,
+        n_episodes=300_000,
         gamma=1.0,
         use_baseline=False,  # set True for variance reduction
         baseline_decay=0.9,
@@ -198,7 +210,6 @@ def main():
 
     win_rate = evaluate(env, policy, n_episodes=10_000, seed=123)
     print(f"\nEvaluated win rate (10k episodes): {win_rate:.4f}")
-    print("(Random policy ≈ -0.05 to 0.0)")
 
     print("\n--- Logging 20 sample episodes ---")
     log_episodes(env, policy, n_episodes=20, seed=456)

@@ -47,14 +47,21 @@ class BlackjackEnv:
         return self._state_to_vector()
 
     def _state_to_vector(self) -> np.ndarray:
-        """State: [dealer_card_counts (10), player_card_counts (10)]."""
+        """State: [dealer_card_counts (10), player_card_counts (10), player_sum/21, dealer_sum/21]."""
         dealer_counts = np.zeros(10)
         player_counts = np.zeros(10)
         for c in self.dealer:
             dealer_counts[c - 1] += 1  # card 1-10 -> index 0-9
         for c in self.player:
             player_counts[c - 1] += 1
-        return np.concatenate([dealer_counts, player_counts]).astype(np.float32)
+
+        scores_player = self.get_value(self.player)
+        scores_dealer = self.get_value(self.dealer)
+        player_sum = np.max(scores_player) if len(scores_player) > 0 else 0
+        dealer_sum = np.max(scores_dealer) if len(scores_dealer) > 0 else 0
+
+        sums = np.array([player_sum / 21.0, dealer_sum / 21.0], dtype=np.float32)
+        return np.concatenate([dealer_counts, player_counts, sums]).astype(np.float32)
 
     def step(self, action):
         # 0 = stay, 1 = hit
