@@ -73,11 +73,12 @@ Evaluates random, hit-below-17, basic strategy, and trained policy over 10k epis
 |--------|--------------------|
 | Random | ~-0.35 |
 | Hit below 17 | ~-0.03 |
-| Basic strategy | ~+0.01 |
-| REINFORCE (trained) | ~+0.01 |
+| Basic strategy | ~+0.015 |
+| REINFORCE (trained) | ~+0.019 |
 
 (Higher is better. Win rate = (wins − losses) / total.)
 
 ## License
 
 MIT
+
