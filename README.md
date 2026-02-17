@@ -60,7 +60,7 @@ Evaluates random, hit-below-17, basic strategy, and trained policy over 10k epis
 We model Blackjack as a **Markov Decision Process (MDP)**:
 
 $$
-v^\pi(s) := \mathbb{E} \left[ \sum_{t=0}^{T-1} \gamma^t R_t \mid S_0 = s \right] \rightarrow \max_{\pi}, \quad s \in \mathcal{S}
+v^{\pi^{\theta}}(s) := \mathbb{E} \left[ \sum_{t=0}^{T-1} \gamma^t R_t \mid S_0 = s \right] \rightarrow \max_{\pi}, \quad s \in \mathcal{S}
 $$
 
 subject to:
@@ -73,7 +73,7 @@ $$
 
 Where:
 
-- $ s_t $ — state at time step $ t $
+- $\\ s_t $ — state at time step $ t $
 - $ a_t $ — action chosen at time $ t $
 - $ r_t $ — reward received at time $ t $
 - $ \gamma \in [0,1] $ — discount factor
