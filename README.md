@@ -79,14 +79,14 @@ Where:
 - $\gamma \in [0,1]$ — discount factor
 - $\pi(a|s)$ — policy
 
-The objective is to learn a policy $ \pi $ that maximizes the **expected return**.
+The objective is to learn a policy $\pi$ that maximizes the **expected return**.
 
 ---
 
 ## Environment
 
 ### State: 
-Each state $ s \in \mathcal{S} $ is represented as:
+Each state $s \in \mathcal{S}$ is represented as:
 
 $$
 s_{1\times22} = (p_{1\times10}, d_{1\times10}, \Sigma_p, \Sigma_d)
@@ -95,9 +95,10 @@ $$
 where:
 
 - $p_{1\times10}$ : player’s count of cards of each value (10, J, Q, K $\to$ 10, A $\to$ {1, 11})
-- $ d_{1\times10} $: dealer’s visible cards  
-- $ \Sigma_p $: Sum value of player's cards  
-- $ \Sigma_d $: Sum value of dealer's cards  
+- $d_{1\times10}$: dealer’s visible cards  
+- $\Sigma_p$: Sum value of player's cards  
+- $\Sigma_d$: Sum value of dealer's cards  
+
 ### Actions: 
 $$
 \mathcal{A} = \{0, 1\}
@@ -105,8 +106,8 @@ $$
 
 where:
 
-- $ 0 $ = **stay** (pass)  
-- $ 1 $ = **hit** (take one more card)
+- $0$ = **stay** (pass)  
+- $1$ = **hit** (take one more card)
 ### Rewards: 
 Rewards are only given at the end of the episode:
 
@@ -126,7 +127,7 @@ Number of decks is configurable one by default. It is being reset after each epi
 
 ## Policy Model
 
-We approximate the policy $ \pi_\theta(a|s) $ using a **MLP**:
+We approximate the policy $\pi_\theta(a|s)$ using a **MLP**:
 
 $$
 p_\theta(s) = \sigma(f_\theta(s))
@@ -134,8 +135,8 @@ $$
 
 Where:
 
-- $ f_\theta(s) $ is a feed-forward neural network  
-- $ \sigma $ is the sigmoid function  
+- $f_\theta(s)$ is a feed-forward neural network  
+- $\sigma$ is the sigmoid function  
 
 The output is the **probability of taking action "hit"**.
 
