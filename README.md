@@ -2,6 +2,18 @@
 
 Reinforcement learning for Blackjack using the **REINFORCE** (Monte Carlo Policy Gradient) algorithm. Includes a custom environment, training pipeline, baseline comparison, and pygame visualization.
 
+## Demo
+
+**Training curve** (reward over episodes):
+
+![Training Curves](curves.jpg)
+
+**Game visualization** (play with AI suggestions):
+
+![Blackjack Demo](blackjack_demo.gif)
+
+---
+
 ## Project Structure
 
 | File | Description |
